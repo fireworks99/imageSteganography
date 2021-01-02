@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>decode</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    #wrapper {
+      text-align: center;
+    }
+    canvas, input, img, button, label, textarea, a {
+      display: block;
+      margin: 2rem auto;
+    }
+    img {
+      max-width: 20rem;
+    }
+    button, label, a {
+      width: 8rem;
+      height: 2rem;
+      cursor: pointer;
+      color: #fff;
+      background: #1aaf5d;
+      border: none;
+      border-radius: 999em;
+    }
+    .imgInput {
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      z-index: -1;
+    }
+    label, a {
+      height: 1.5rem;
+    }
+    #infoOutput {
+      width: 20rem;
+      height: 4.1rem;
+      line-height: 2rem;
+      font-size: 2rem;
+    }
+    a {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="wrapper">
+
+  <canvas id="beforeC" style="display: none"></canvas>
+  <canvas id="afterC" style="display: none"></canvas>
+
+  <img src="" alt="" id="before">
+  <label for="beforeInput">选择文件(前)</label>
+  <input type="file" id="beforeInput" name="img" class="imgInput">
+  <img src="" alt="" id="after">
+  <label for="afterInput">选择文件(后)</label>
+  <input type="file" id="afterInput" name="img" class="imgInput">
+
+  <button id="decode">解码</button>
+
+  <textarea type="text" id="infoOutput" name="info"></textarea>
+
+  <a href="./encode.html">去编码</a>
+
+</div>
+
+
+<script>
+
+  //--------------------------------load image--------------------------------
+
+  const beforeInput = document.getElementById("beforeInput");
+  const afterInput = document.getElementById("afterInput");
+  const beforeImg = document.getElementById("before");
+  const afterImg = document.getElementById("after");
+  beforeInput.onchange = function () {
+    let file = document.getElementById("beforeInput").files[0];
+    let reader = new FileReader();
+    let imgFile;
+    reader.onload=function(e) {
+      imgFile = e.target.result;
+      beforeImg.setAttribute("src", imgFile);
+    };
+    reader.readAsDataURL(file);
+  }
+  afterInput.onchange = function () {
+    let file = document.getElementById("afterInput").files[0];
+    let reader = new FileReader();
+    let imgFile;
+    reader.onload=function(e) {
+      imgFile = e.target.result;
+      afterImg.setAttribute("src", imgFile);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  //--------------------------------load image---------------------------------
+
+  const btn = document.getElementById("decode");
+  btn.onclick = function() {
+    let beforeSrc = beforeImg.getAttribute("src");
+    let afterSrc = afterImg.getAttribute("src");
+    if(beforeSrc === "" || afterSrc === "") {
+      alert("Don't forget to load the image.")
+    } else {
+
+      let beforeCanvas = document.getElementById("beforeC");
+
+      let beforeImage = new Image();
+
+      beforeImage.src = beforeSrc;
+
+      beforeImage.onload = function(){
+        beforeCanvas.width = beforeImage.width;
+        beforeCanvas.height= beforeImage.height;
+        beforeCanvas.getContext("2d").drawImage(beforeImage, 0, 0, beforeImage.width, beforeImage.height);
+
+        let beforeCtx= beforeCanvas.getContext("2d");
+        let beforeImageData = beforeCtx.getImageData(0, 0, beforeCanvas.width, beforeCanvas.width);
+
+        let px = beforeImageData.data;
+
+        let afterCanvas = document.getElementById("afterC");
+        let afterImage = new Image();
+        afterImage.src = afterSrc;
+
+        afterImage.onload = function () {
+          afterCanvas.width = afterImage.width;
+          afterCanvas.height= afterImage.height;
+          afterCanvas.getContext("2d").drawImage(afterImage, 0, 0, afterImage.width, afterImage.height);
+
+          let afterCtx= afterCanvas.getContext("2d");
+          let afterImageData = afterCtx.getImageData(0, 0, afterCanvas.width, afterCanvas.width);
+
+          let afterPx = afterImageData.data;
+
+          let resB = "";
+          for(let j = 16; j + 15 < px.length; ++j){
+            if(j % 16 === 0 && resB.length >= 16 && resB.slice(-16) === "0000000000000000")
+              break;
+            resB += (px[j] === afterPx[j] ? "0" : "1");
+          }
+
+
+          let tt = 0;
+          for(let j = 0; j + 15 < px.length; j+=16) {
+            if(resB[j] === undefined)
+              break;
+            let t = ""
+            for(let i = j; i < j + 16; ++i) {
+              t += resB[i];
+            }
+            console.log(tt++, t);
+          }
+
+          let resH = [];
+          let id = 0;
+          for(let i = 0; i + 15 < resB.length; i += 16) {
+            resH[id] = "%u";
+            for(let j = i; j + 3 < i + 16; j += 4) {
+              resH[id] += parseInt(resB[j] + resB[j + 1] + resB[j + 2] + resB[j + 3], 2).toString(16);
+            }
+            id++;
+          }
+          let ans = resH.join('');
+          // console.log(ans);
+          let res = unescape(ans);
+          let output = document.getElementById("infoOutput");
+          output.value = res;
+          // console.log(res);
+        }
+      }
+
+    }
+  }
+</script>
+</body>
+</html>

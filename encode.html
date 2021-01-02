@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>encode</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    #wrapper {
+      text-align: center;
+    }
+    canvas, input, img, button, label, textarea, a {
+      display: block;
+      margin: 2rem auto;
+    }
+    img {
+      max-width: 20rem;
+    }
+    button, label, a {
+      width: 8rem;
+      height: 2rem;
+      cursor: pointer;
+      color: #fff;
+      background: #1aaf5d;
+      border: none;
+      border-radius: 999em;
+    }
+    #imgInput {
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      z-index: -1;
+    }
+    label, a {
+      height: 1.5rem;
+    }
+    #infoInput {
+      width: 20rem;
+      height: 4.1rem;
+      line-height: 2rem;
+      font-size: 2rem;
+    }
+    a {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="wrapper">
+  <canvas id="c" style="display: none"></canvas>
+  <textarea type="text" id="infoInput" name="info"></textarea>
+  <img src="" alt="" id="showImg">
+  <label for="imgInput">选择文件</label>
+  <input type="file" id="imgInput" name="img">
+
+  <button id="write">将信息写入图片</button>
+
+  <a href="./decode.html">去解码</a>
+
+</div>
+
+<script>
+
+  //--------------------------------load image--------------------------------
+
+  const input = document.getElementById("imgInput");
+  const img = document.getElementById("showImg");
+  input.onchange = function () {
+    let file = document.getElementById("imgInput").files[0];
+
+    let reader = new FileReader();
+
+    let imgFile;
+
+    reader.onload=function(e) {
+      imgFile = e.target.result;
+      img.setAttribute("src", imgFile);
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  //--------------------------------load image---------------------------------
+
+  const btn = document.getElementById("write");
+  btn.onclick = function() {
+
+    let src = img.getAttribute("src");
+    if(src === "") {
+      alert("Don't forget to load the image.")
+    } else {
+
+      let info = document.getElementById("infoInput").value;
+      let resB = encodeUnicode(info);
+
+      let newCanvas = document.getElementById("c");
+      let image = new Image();
+
+      image.src = src;
+
+      image.onload = function(){
+        newCanvas.width = image.width;
+        newCanvas.height= image.height;
+        newCanvas.getContext("2d").drawImage(image, 0, 0, image.width, image.height);
+
+        let ctx= newCanvas.getContext("2d");
+        let imageData = ctx.getImageData(0, 0, newCanvas.width, newCanvas.width);
+
+        let px = imageData.data;
+
+        let idx = 0;
+
+        for(let i = 16; i < px.length && idx < resB.length; ++i) {
+            if(resB[idx++] === "1") {
+              px[i] = (px[i] === 255 ? px[i] - 1 : px[i] + 1);
+            }
+        }
+
+        ctx.putImageData(imageData,0,0);
+
+        let dataUri= newCanvas.toDataURL("image/png");
+        let link = document.createElement('a')
+        link.href = dataUri;
+        link.download = "after.png";
+        link.click();
+      }
+
+    }
+  }
+
+  function encodeUnicode(str) {
+    let resH = "";
+    let resB = "";
+    for (let i = 0; i < str.length; i++) {
+      resH = ( "000" + str.charCodeAt(i).toString(16) ).slice(-4);
+      for(let j = 0; j < 4; ++j)
+        resB += H2B(resH[j]);
+    }
+    return resB;
+  }
+
+  function H2B(c) {
+    return ("000" + parseInt(c, 16).toString(2)).slice(-4);
+  }
+
+</script>
+</body>
+</html>
