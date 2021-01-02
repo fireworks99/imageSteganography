@@ -37,4 +37,6 @@
 
    ![after2](/images/after2.png)
 
-   
+   > Demo：http://encode.fireworks99.top/
+   >
+   > http://encode.fireworks99.top/decode.html
