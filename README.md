@@ -23,18 +23,18 @@
 
    > 储存信息：1234567890123456789012345678901234567890
 
-   ![before1](\images\encode.png)
+   ![before1](/images/encode.png)
 
    > 出现错误
 
-   ![after1](\images\after.png)
+   ![after1](/images/after.png)
 
    > 储存同样的信息：
 
-   ![before2](\images\before2.png)
+   ![before2](/images/before2.png)
 
    > 出现的错误不同：
 
-   ![after2](\images\after2.png)
+   ![after2](/images/after2.png)
 
    
